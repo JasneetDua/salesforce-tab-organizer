@@ -6,7 +6,7 @@ export default class Popup extends LightningElement {
     @api fieldName;
     @api labelYes = 'Yes';
     @api labelNo = 'No';
-    isChecked = false;
+    @api isChecked = false;
 
 
     get checked(){
@@ -19,7 +19,6 @@ export default class Popup extends LightningElement {
     handleValueChange(event){
         const value = event.currentTarget.value;
         this.isChecked = value === 'true';
-        console.log(this.isChecked);
         const evt = new CustomEvent("change", {
             detail: { 
                 fieldName: this.fieldName,
