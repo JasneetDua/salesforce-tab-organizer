@@ -1,0 +1,13 @@
+<template>
+    <template if:false={isLoading}>
+        <div class="popup-container">
+
+        </div>
+    </template>
+    <c-card>
+        <c-developer-info></c-developer-info>
+    </c-card>
+    <template if:true={isLoading}>
+        <c-spinner></c-spinner>
+    </template>
+</template>

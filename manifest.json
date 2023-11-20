@@ -29,5 +29,10 @@
     ],
     "background": {
         "service_worker": "scripts/service_worker.js"
+    },
+    "action": {
+        "default_icon": "images/icons/icon-16.png",
+        "default_popup": "popup/index.html",
+        "default_title": "Salesforce Tab Organizer"
     }
 }
