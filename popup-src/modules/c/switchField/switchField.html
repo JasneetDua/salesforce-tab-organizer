@@ -1,0 +1,8 @@
+<template>
+    <div class="switch-field">
+        <input class="switch-field__input" id="radio-yes" name="switch-one" type="radio" value="true" onchange={handleValueChange} checked={checked}></input>
+        <label class="switch-field__label" for="radio-yes">{labelYes}</label>
+        <input class="switch-field__input" id="radio-no" name="switch-one" type="radio" value="false" onchange={handleValueChange} checked={unChecked}></input>
+        <label class="switch-field__label" for="radio-no">{labelNo}</label>
+    </div>
+</template>
