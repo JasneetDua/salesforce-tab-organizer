@@ -23,6 +23,11 @@
         }
     ],
     "permissions": [
-        "tabs"
-    ]
+        "tabs",
+        "tabGroups",
+        "storage"
+    ],
+    "background": {
+        "service_worker": "scripts/service_worker.js"
+    }
 }
