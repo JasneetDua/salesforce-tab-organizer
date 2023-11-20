@@ -3,6 +3,7 @@
 const CONSTANTS = {
     GROUP_EXISTANCE_CHECK: 'GROUP_EXISTANCE_CHECK',
     MOVE_TO_GROUP: 'MOVE_TO_GROUP',
+    GET_SETTINGS: 'GET_SETTINGS',
 };
 
 // general utils
@@ -32,6 +33,15 @@ const getOrgIdFromCookie = () => {
 
 
 const init = async () => {
+
+    const settingsResponse = await chrome.runtime.sendMessage({
+        action: CONSTANTS.GET_SETTINGS
+    });
+
+    const settings = settingsResponse.settings;
+    if(!settings.enableOrganizer){
+        return;
+    }
     const orgId = getOrgIdFromCookie();
     // if org id found, ask service worker to group
     if(orgId){

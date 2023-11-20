@@ -3,7 +3,14 @@
 const CONSTANTS = {
     GROUP_EXISTANCE_CHECK: 'GROUP_EXISTANCE_CHECK',
     MOVE_TO_GROUP: 'MOVE_TO_GROUP',
+    GET_SETTINGS: 'GET_SETTINGS',
 };
+
+const settings = {
+    enableOrganizer: true,
+    // enableGroupNamePrompt: true,
+}
+
 
 const createGroup = async (currentTab, orgId, name) => {
     // check group existance for the passed org id
@@ -42,15 +49,23 @@ const getNameSuggestion = (origin) => {
 // new tab listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
-    const nameSuggestion = getNameSuggestion(sender.origin);
-
-    if (request.action === CONSTANTS.MOVE_TO_GROUP) {
+    if(request.action === CONSTANTS.GET_SETTINGS){
+        (async () => {
+            const storage = await chrome.storage.sync.get('settings');
+            const userSettings = {...settings, ...storage.settings};
+            sendResponse({ settings: userSettings });
+        })();
+        return true;
+    }
+    else if (request.action === CONSTANTS.MOVE_TO_GROUP) {
+        const nameSuggestion = getNameSuggestion(sender.origin);
         const currentTab = sender.tab;
         const orgId = request.orgId;
         const name = !!request.name ? request.name : nameSuggestion;
         createGroup(currentTab, orgId, name);
     }
     else if (request.action === CONSTANTS.GROUP_EXISTANCE_CHECK) {
+        const nameSuggestion = getNameSuggestion(sender.origin);
         const orgId = request.orgId;
         (async () => {
             const existingGroup = await chrome.storage.session.get([orgId]);
