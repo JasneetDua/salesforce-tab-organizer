@@ -59,7 +59,9 @@ const handleRefresh = async (sendResponse) => {
 
         const listOfTabList = await Promise.all(tabsPromisesList);
         const tabList = listOfTabList.flat();
-        await chrome.tabs.ungroup(tabList.map(t => t.id));
+        if(tabList.length){
+            await chrome.tabs.ungroup(tabList.map(t => t.id));
+        }
 
         // ask tabs for org id
         const allTabs = await chrome.tabs.query({});

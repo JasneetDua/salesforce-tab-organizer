@@ -52,11 +52,13 @@ export default class Popup extends LightningElement {
             const listOfTabList = await Promise.all(tabsPromisesList);
             const tabList = listOfTabList.flat();
 
-            if (action == 'ungroup') {
-                await chrome.tabs.ungroup(tabList.map(t => t.id));
-            }
-            else if (action == 'close') {
-                await chrome.tabs.remove(tabList.map(t => t.id));
+            if(tabList.length){
+                if (action == 'ungroup') {
+                    await chrome.tabs.ungroup(tabList.map(t => t.id));
+                }
+                else if (action == 'close') {
+                    await chrome.tabs.remove(tabList.map(t => t.id));
+                }
             }
         }
         else if(action == 'refresh'){
