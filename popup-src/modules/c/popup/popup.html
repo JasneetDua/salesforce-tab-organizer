@@ -6,6 +6,28 @@
                         <c-switch-field field-name="enableOrganizer" is-checked={settings.enableOrganizer} onchange={handleFieldChange}></c-switch-field>
                     </div>
             </c-card>
+
+            <template if:true={showExistingGroupsActions}>
+                <c-card card-title="Grouped Tab Actions">
+                    <div class="action">
+                        <div class="action__item">
+                            <c-button onclick={handleAction} data-action="ungroup">Ungroup Tabs</c-button>
+                        </div>
+                        <div class="action__item">
+                            <c-button onclick={handleAction} data-action="close">Close Groups</c-button>
+                        </div>
+                    </div>
+                </c-card>
+            </template>
+            <template if:true={settings.enableOrganizer}>
+                <c-card card-title="Reorganize">
+                    <div class="action">
+                        <div class="action__item">
+                            <c-button onclick={handleAction} data-action="refresh">Refresh</c-button>
+                        </div>
+                    </div>
+                </c-card>
+            </template>
         </div>
     </template>
     <c-card>

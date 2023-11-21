@@ -5,3 +5,10 @@
 .popup__msg {
     padding: 40px;
 }
+
+.action {
+    display: flex;
+}
+.action__item {
+    margin-right: 10px;
+}

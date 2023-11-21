@@ -1,6 +1,8 @@
 // es import not yet supported in content scripts.
 // should be in const file
 const CONSTANTS = {
+    GET_ORG_ID: 'GetOrgId',
+    REFRESH: 'Refresh',
     GROUP_EXISTANCE_CHECK: 'GROUP_EXISTANCE_CHECK',
     MOVE_TO_GROUP: 'MOVE_TO_GROUP',
     GET_SETTINGS: 'GET_SETTINGS',
@@ -46,6 +48,50 @@ const getNameSuggestion = (origin) => {
 }
 
 
+const handleRefresh = async (sendResponse) => {
+    try {
+
+        // ungroup all grouped tabs
+        const groupMap = await chrome.storage.session.get();
+        const tabsPromisesList = Object.values(groupMap).map((groupId) => {
+            return chrome.tabs.query({ groupId: groupId });
+        });
+
+        const listOfTabList = await Promise.all(tabsPromisesList);
+        const tabList = listOfTabList.flat();
+        await chrome.tabs.ungroup(tabList.map(t => t.id));
+
+        // ask tabs for org id
+        const allTabs = await chrome.tabs.query({});
+        const tabResponsesPromise = allTabs.map(tab => {
+            return chrome.tabs.sendMessage( tab.id, {action: CONSTANTS.GET_ORG_ID});
+        });
+        const tabResponses = await Promise.allSettled(tabResponsesPromise);
+        const tabsWithOrgId = tabResponses.map((response, index) => {
+            if(response.status == 'fulfilled'){
+                return {
+                    ...response.value,
+                    tab: allTabs[index]
+                }
+            }
+            return null;
+        }).filter(tabWithId => !!tabWithId && !! tabWithId.orgId);
+
+        // regroup tabs
+        for (const tabInfo of tabsWithOrgId) {
+            const nameSuggestion = getNameSuggestion(tabInfo.tab.url);
+            const currentTab = tabInfo.tab;
+            const orgId = tabInfo.orgId;
+            const name = nameSuggestion;
+            await createGroup(currentTab, orgId, name);
+        }
+        sendResponse(true);
+    }
+    catch(ex){
+        sendResponse(false);
+    }
+}
+
 // new tab listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
@@ -76,6 +122,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 nameSuggestion: nameSuggestion
             });
         })();
+        return true;
+    }
+    else if(request.action == CONSTANTS.REFRESH) {
+        handleRefresh(sendResponse);
         return true;
     }
 });

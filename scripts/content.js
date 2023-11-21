@@ -1,6 +1,8 @@
 // es import not yet supported in content scripts.
 // should be in const file
 const CONSTANTS = {
+    GET_ORG_ID: 'GetOrgId',
+    REFRESH: 'Refresh',
     GROUP_EXISTANCE_CHECK: 'GROUP_EXISTANCE_CHECK',
     MOVE_TO_GROUP: 'MOVE_TO_GROUP',
     GET_SETTINGS: 'GET_SETTINGS',
@@ -71,3 +73,11 @@ const init = async () => {
 
 // content js starting point
 init();
+
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if(request.action == CONSTANTS.GET_ORG_ID){
+        const orgId = getOrgIdFromCookie();
+        sendResponse({orgId: orgId});
+    }
+});

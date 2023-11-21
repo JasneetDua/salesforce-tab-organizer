@@ -1,5 +1,9 @@
 const CONSTANTS = {
     GET_ORG_ID: 'GetOrgId',
+    REFRESH: 'Refresh',
+    GROUP_EXISTANCE_CHECK: 'GROUP_EXISTANCE_CHECK',
+    MOVE_TO_GROUP: 'MOVE_TO_GROUP',
+    GET_SETTINGS: 'GET_SETTINGS',
 };
 
 export {
