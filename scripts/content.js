@@ -41,32 +41,42 @@ const init = async () => {
     });
 
     const settings = settingsResponse.settings;
-    if(!settings.enableOrganizer){
+    if (!settings.enableOrganizer) {
         return;
     }
     const orgId = getOrgIdFromCookie();
     // if org id found, ask service worker to group
-    if(orgId){
-        const existanceCheckResponse = await chrome.runtime.sendMessage({
-            action: CONSTANTS.GROUP_EXISTANCE_CHECK,
-            orgId: orgId
-        });
-
-        if(existanceCheckResponse.isExisting){
+    if (orgId) {
+        // if ask group name is enabled
+        if (settings.enableGroupNamePrompt) {
+            const existanceCheckResponse = await chrome.runtime.sendMessage({
+                action: CONSTANTS.GROUP_EXISTANCE_CHECK,
+                orgId: orgId
+            });
+            if (existanceCheckResponse.isExisting) {
+                await chrome.runtime.sendMessage({
+                    action: CONSTANTS.MOVE_TO_GROUP,
+                    orgId: orgId
+                });
+            }
+            else {
+                const createGroup = prompt("Create Group?", existanceCheckResponse.nameSuggestion);
+                if (createGroup !== null) {
+                    await chrome.runtime.sendMessage({
+                        action: CONSTANTS.MOVE_TO_GROUP,
+                        orgId: orgId,
+                        name: createGroup
+                    });
+                }
+            }
+        }
+        else {
+            // if ask group name is disabled
             await chrome.runtime.sendMessage({
                 action: CONSTANTS.MOVE_TO_GROUP,
                 orgId: orgId
             });
-        }
-        else {
-            const createGroup = prompt("Create Group?", existanceCheckResponse.nameSuggestion);
-            if(createGroup !== null){
-                await chrome.runtime.sendMessage({
-                    action: CONSTANTS.MOVE_TO_GROUP,
-                    orgId: orgId, 
-                    name: createGroup
-                });
-            }
+
         }
     }
 }
@@ -76,8 +86,8 @@ init();
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if(request.action == CONSTANTS.GET_ORG_ID){
+    if (request.action == CONSTANTS.GET_ORG_ID) {
         const orgId = getOrgIdFromCookie();
-        sendResponse({orgId: orgId});
+        sendResponse({ orgId: orgId });
     }
 });
