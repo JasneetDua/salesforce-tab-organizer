@@ -4,14 +4,14 @@ import { CONSTANTS } from 'c/constants';
 export default class Popup extends LightningElement {
 
     isLoading = true;
-    groupMap = [];
+    orgIdGroupMap = {};
     @track settings = {
         enableOrganizer: true,
         enableGroupNamePrompt: true,
     }
 
     get showExistingGroupsActions() {
-        return !this.settings.enableOrganizer && Object.keys(this.groupMap).length;
+        return !this.settings.enableOrganizer && Object.keys(this.orgIdGroupMap).length;
     }
 
     connectedCallback() {
@@ -26,8 +26,7 @@ export default class Popup extends LightningElement {
                 ...storage.settings
             }
         }
-        const groupMap = await chrome.storage.session.get();
-        this.groupMap = groupMap;
+        await this.refreshOrgIdGroupMap();
         this.isLoading = false;
     }
 
@@ -36,8 +35,7 @@ export default class Popup extends LightningElement {
         this.settings[fieldName] = value;
         await chrome.storage.sync.set({ 'settings': this.settings });
         if(fieldName == 'enableOrganizer' && !value){
-            const groupMap = await chrome.storage.session.get();
-            this.groupMap = groupMap;
+            await this.refreshOrgIdGroupMap();
         }
     }
 
@@ -45,7 +43,7 @@ export default class Popup extends LightningElement {
         const { action } = event.currentTarget.dataset;
 
         if(action == 'ungroup' || action == 'close'){
-            const tabsPromisesList = Object.values(this.groupMap).map((groupId) => {
+            const tabsPromisesList = Object.values(this.orgIdGroupMap).map((groupId) => {
                 return chrome.tabs.query({ groupId: groupId });
             });
 
@@ -64,5 +62,10 @@ export default class Popup extends LightningElement {
         else if(action == 'refresh'){
             const success = await chrome.runtime.sendMessage({action: CONSTANTS.REFRESH});
         }
+    }
+
+    async refreshOrgIdGroupMap(){
+        const orgIdGroupMapStorage = await chrome.storage.session.get('orgIdGroupMap');
+        this.orgIdGroupMap = orgIdGroupMapStorage.orgIdGroupMap ?? {};
     }
 }

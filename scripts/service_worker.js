@@ -16,8 +16,9 @@ const settings = {
 
 const createGroup = async (currentTab, orgId, name) => {
     // check group existance for the passed org id
-    const existingGroup = await chrome.storage.session.get([orgId]);
-    const existingGroupId = existingGroup[orgId];
+    const orgIdGroupMapStorage = await chrome.storage.session.get('orgIdGroupMap');
+    const orgIdGroupMap = orgIdGroupMapStorage.orgIdGroupMap ?? {};
+    const existingGroupId = orgIdGroupMap[orgId];
 
     if (existingGroupId) {
         // add tab in existing group
@@ -26,7 +27,7 @@ const createGroup = async (currentTab, orgId, name) => {
     else {
         // create new group and add tab into the group
         const newGroup = await chrome.tabs.group({ tabIds: currentTab.id });
-        await chrome.storage.session.set({ [orgId]: newGroup });
+        await chrome.storage.session.set({'orgIdGroupMap': {...orgIdGroupMap, [orgId]: newGroup }});
         await chrome.tabGroups.update(newGroup, { title: name });
     }
 }
@@ -52,8 +53,9 @@ const handleRefresh = async (sendResponse) => {
     try {
 
         // ungroup all grouped tabs
-        const groupMap = await chrome.storage.session.get();
-        const tabsPromisesList = Object.values(groupMap).map((groupId) => {
+        const orgIdGroupMapStorage = await chrome.storage.session.get('orgIdGroupMap');
+        const orgIdGroupMap = orgIdGroupMapStorage.orgIdGroupMap ?? {};
+        const tabsPromisesList = Object.values(orgIdGroupMap).map((groupId) => {
             return chrome.tabs.query({ groupId: groupId });
         });
 
@@ -116,8 +118,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const nameSuggestion = getNameSuggestion(sender.origin);
         const orgId = request.orgId;
         (async () => {
-            const existingGroup = await chrome.storage.session.get([orgId]);
-            const existingGroupId = existingGroup[orgId];
+
+            const orgIdGroupMapStorage = await chrome.storage.session.get('orgIdGroupMap');
+            const orgIdGroupMap = orgIdGroupMapStorage.orgIdGroupMap ?? {};
+            const existingGroupId = orgIdGroupMap[orgId];
 
             sendResponse({
                 isExisting: !!existingGroupId,
@@ -134,9 +138,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // group removal listener
 chrome.tabGroups.onRemoved.addListener(async (removedGroup) => {
-    const storageMap = await chrome.storage.session.get();
-    const orgId = Object.keys(storageMap)[Object.values(storageMap).indexOf(removedGroup.id)];
+    const orgIdGroupMapStorage = await chrome.storage.session.get('orgIdGroupMap');
+    let orgIdGroupMap = orgIdGroupMapStorage.orgIdGroupMap ?? {};
+
+    const orgId = Object.keys(orgIdGroupMap)[Object.values(orgIdGroupMap).indexOf(removedGroup.id)];
     if (orgId) {
-        await chrome.storage.session.remove(orgId);
+        delete orgIdGroupMap[orgId];
+        await chrome.storage.session.set({'orgIdGroupMap': orgIdGroupMap});
     }
 });
