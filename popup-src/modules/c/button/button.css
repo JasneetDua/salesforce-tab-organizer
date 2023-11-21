@@ -1,0 +1,8 @@
+.button {
+    color: rgb(255, 255, 255);
+    background-color: rgb(34, 34, 34);
+    display: inline-block;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 10px;
+}
