@@ -10,7 +10,7 @@ const CONSTANTS = {
 
 const settings = {
     enableOrganizer: true,
-    // enableGroupNamePrompt: true,
+    enableGroupNamePrompt: true,
 }
 
 

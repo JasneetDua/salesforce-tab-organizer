@@ -20,10 +20,17 @@
                 </c-card>
             </template>
             <template if:true={settings.enableOrganizer}>
-                <c-card card-title="Reorganize">
-                    <div class="action">
-                        <div class="action__item">
+                <c-card card-title="Settings / Actions">
+                    <div class="setting-field">
+                        <div class="setting-field__label">Reorganize the tabs</div>
+                        <div class="setting-field__input">
                             <c-button onclick={handleAction} data-action="refresh">Refresh</c-button>
+                        </div>
+                    </div>
+                    <div class="setting-field">
+                        <div class="setting-field__label">Ask Group Name</div>
+                        <div class="setting-field__input">
+                            <c-switch-field field-name="enableGroupNamePrompt" is-checked={settings.enableGroupNamePrompt} onchange={handleFieldChange}></c-switch-field>
                         </div>
                     </div>
                 </c-card>

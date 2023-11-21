@@ -7,7 +7,7 @@ export default class Popup extends LightningElement {
     groupMap = [];
     @track settings = {
         enableOrganizer: true,
-        // enableGroupNamePrompt: true,
+        enableGroupNamePrompt: true,
     }
 
     get showExistingGroupsActions() {
