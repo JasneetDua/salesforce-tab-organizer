@@ -38,6 +38,10 @@ const createGroup = async (currentTab, orgId, name) => {
         const newGroupId = await chrome.tabs.group({ tabIds: currentTab.id });
         await chrome.storage.session.set({ 'orgIdGroupMap': { ...orgIdGroupMap, [orgId]: newGroupId } });
         await chrome.tabGroups.update(newGroupId, { title: name });
+        // maintain dictionary of names
+        const orgNameMapStorage = await chrome.storage.sync.get('orgNameMap');
+        const orgNameMap = orgNameMapStorage.orgNameMap ?? {};
+        await chrome.storage.sync.set({ 'orgNameMap': { ...orgNameMap, [orgId]: name } });
     }
 }
 
