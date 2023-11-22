@@ -6,6 +6,8 @@ const CONSTANTS = {
     GROUP_EXISTANCE_CHECK: 'GROUP_EXISTANCE_CHECK',
     MOVE_TO_GROUP: 'MOVE_TO_GROUP',
     GET_SETTINGS: 'GET_SETTINGS',
+    UNGROUP_ALL_TABS: 'UNGROUP_ALL_TABS',
+    CLOSE_ALL_GROUP: 'CLOSE_ALL_GROUP',
 };
 
 const settings = {
@@ -103,6 +105,31 @@ const handleRefresh = async (sendResponse) => {
     }
 }
 
+
+const handleUngroup = async (sendResponse, ungroupAndClose) => {
+    const orgIdGroupMapStorage = await chrome.storage.session.get('orgIdGroupMap');
+    const orgIdGroupMap = orgIdGroupMapStorage.orgIdGroupMap ?? {};
+
+    const tabsPromisesList = Object.values(orgIdGroupMap).map((groupId) => {
+        return chrome.tabs.query({ groupId: groupId });
+    });
+
+    const listOfTabList = await Promise.all(tabsPromisesList);
+    const tabList = listOfTabList.flat();
+
+    if(tabList.length){
+        const tabIdList = tabList.map(t => t.id);
+        await chrome.storage.session.remove('orgIdGroupMap');
+        if (ungroupAndClose) {
+            await chrome.tabs.remove(tabIdList);
+        }
+        else {
+            await chrome.tabs.ungroup(tabIdList);
+        }
+    }
+    sendResponse(true);
+}
+
 // new tab listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
@@ -139,6 +166,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     else if (request.action == CONSTANTS.REFRESH) {
         handleRefresh(sendResponse);
+        return true;
+    }
+    else if(request.action == CONSTANTS.CLOSE_ALL_GROUP || request.action == CONSTANTS.UNGROUP_ALL_TABS){
+        handleUngroup(sendResponse, request.action == CONSTANTS.CLOSE_ALL_GROUP);
         return true;
     }
 });

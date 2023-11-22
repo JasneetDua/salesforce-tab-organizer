@@ -48,27 +48,16 @@ export default class Popup extends LightningElement {
     async handleAction(event) {
         const { action } = event.currentTarget.dataset;
 
-        if(action == 'ungroup' || action == 'close'){
-            const tabsPromisesList = Object.values(this.orgIdGroupMap).map((groupId) => {
-                return chrome.tabs.query({ groupId: groupId });
-            });
-
-            const listOfTabList = await Promise.all(tabsPromisesList);
-            const tabList = listOfTabList.flat();
-
-            if(tabList.length){
-                if (action == 'ungroup') {
-                    await chrome.tabs.ungroup(tabList.map(t => t.id));
-                }
-                else if (action == 'close') {
-                    await chrome.tabs.remove(tabList.map(t => t.id));
-                }
-                await chrome.storage.session.remove('orgIdGroupMap');
-            }
+        if(action == 'ungroup'){
+            const success = await chrome.runtime.sendMessage({action: CONSTANTS.UNGROUP_ALL_TABS});
+        }
+        else if(action == 'close'){
+            const success = await chrome.runtime.sendMessage({action: CONSTANTS.CLOSE_ALL_GROUP});
         }
         else if(action == 'refresh'){
             const success = await chrome.runtime.sendMessage({action: CONSTANTS.REFRESH});
         }
+        await this.refreshOrgIdGroupMap();
     }
 
     async refreshOrgIdGroupMap(){
