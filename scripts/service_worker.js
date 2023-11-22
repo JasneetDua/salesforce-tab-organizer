@@ -46,7 +46,13 @@ const createGroup = async (currentTab, orgId, name) => {
 }
 
 
-const getNameSuggestion = (origin) => {
+const getNameSuggestion = async (origin, orgId) => {
+    const orgNameMapStorage = await chrome.storage.sync.get('orgNameMap');
+    const orgNameMap = orgNameMapStorage.orgNameMap ?? {};
+    if(orgNameMap[orgId]){
+        return orgNameMap[orgId];
+    }
+
     const originSegments = origin.split('.');
     if (originSegments.length) {
         const instanceName = originSegments[0];
@@ -96,7 +102,7 @@ const handleRefresh = async (sendResponse) => {
 
         // regroup tabs
         for (const tabInfo of tabsWithOrgId) {
-            const nameSuggestion = getNameSuggestion(tabInfo.tab.url);
+            const nameSuggestion = await getNameSuggestion(tabInfo.tab.url, tabInfo.orgId);
             const currentTab = tabInfo.tab;
             const orgId = tabInfo.orgId;
             const name = nameSuggestion;
@@ -146,17 +152,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
     else if (request.action === CONSTANTS.MOVE_TO_GROUP) {
-        const nameSuggestion = getNameSuggestion(sender.origin);
-        const currentTab = sender.tab;
-        const orgId = request.orgId;
-        const name = !!request.name ? request.name : nameSuggestion;
-        createGroup(currentTab, orgId, name);
+        (async () => {
+            const currentTab = sender.tab;
+            const orgId = request.orgId;
+            const nameSuggestion = await getNameSuggestion(sender.origin, orgId);
+            const name = !!request.name ? request.name : nameSuggestion;
+            createGroup(currentTab, orgId, name);
+        })();
     }
     else if (request.action === CONSTANTS.GROUP_EXISTANCE_CHECK) {
-        const nameSuggestion = getNameSuggestion(sender.origin);
-        const orgId = request.orgId;
         (async () => {
-
+            const orgId = request.orgId;
+            const nameSuggestion = await getNameSuggestion(sender.origin, orgId);
             const orgIdGroupMapStorage = await chrome.storage.session.get('orgIdGroupMap');
             const orgIdGroupMap = orgIdGroupMapStorage.orgIdGroupMap ?? {};
             const existingGroupId = orgIdGroupMap[orgId];
