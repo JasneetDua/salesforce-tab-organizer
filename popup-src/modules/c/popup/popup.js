@@ -63,6 +63,7 @@ export default class Popup extends LightningElement {
                 else if (action == 'close') {
                     await chrome.tabs.remove(tabList.map(t => t.id));
                 }
+                await chrome.storage.session.remove('orgIdGroupMap');
             }
         }
         else if(action == 'refresh'){
