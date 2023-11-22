@@ -154,3 +154,20 @@ chrome.tabGroups.onRemoved.addListener(async (removedGroup) => {
         await chrome.storage.session.set({ 'orgIdGroupMap': orgIdGroupMap });
     }
 });
+
+
+// to monitor changes
+chrome.storage.onChanged.addListener(function (changes, storageName) {
+    if(storageName == 'session'){
+        if(changes.orgIdGroupMap){
+            let groupCounts = 0;
+            if(changes.orgIdGroupMap.newValue){
+                groupCounts = Object.keys(changes.orgIdGroupMap.newValue).length;
+            }
+            chrome.action.setBadgeText({"text": groupCounts.toString() });
+        }
+    }
+});
+
+chrome.action.setBadgeBackgroundColor({color: '#008080'});
+chrome.action.setBadgeTextColor( {color: '#FFF'} );
