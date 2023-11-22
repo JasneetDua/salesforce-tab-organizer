@@ -11,6 +11,7 @@ const CONSTANTS = {
 const settings = {
     enableOrganizer: true,
     enableGroupNamePrompt: true,
+    groupInNewWindow: false,
 }
 
 
@@ -26,9 +27,15 @@ const createGroup = async (currentTab, orgId, name) => {
     }
     else {
         // create new group and add tab into the group
-        const newGroup = await chrome.tabs.group({ tabIds: currentTab.id });
-        await chrome.storage.session.set({'orgIdGroupMap': {...orgIdGroupMap, [orgId]: newGroup }});
-        await chrome.tabGroups.update(newGroup, { title: name });
+
+        const storage = await chrome.storage.sync.get('settings');
+        const userSettings = {...settings, ...storage.settings};
+        if(userSettings.groupInNewWindow){
+            await chrome.windows.create({focused: true, state: 'maximized', tabId: currentTab.id});
+        }
+        const newGroupId = await chrome.tabs.group({ tabIds: currentTab.id });
+        await chrome.storage.session.set({'orgIdGroupMap': {...orgIdGroupMap, [orgId]: newGroupId }});
+        await chrome.tabGroups.update(newGroupId, { title: name });
     }
 }
 
@@ -64,7 +71,7 @@ const handleRefresh = async (sendResponse) => {
         if(tabList.length){
             await chrome.tabs.ungroup(tabList.map(t => t.id));
         }
-
+        await chrome.storage.session.remove('orgIdGroupMap');
         // ask tabs for org id
         const allTabs = await chrome.tabs.query({});
         const tabResponsesPromise = allTabs.map(tab => {
