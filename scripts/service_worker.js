@@ -29,12 +29,12 @@ const createGroup = async (currentTab, orgId, name) => {
         // create new group and add tab into the group
 
         const storage = await chrome.storage.sync.get('settings');
-        const userSettings = {...settings, ...storage.settings};
-        if(userSettings.groupInNewWindow){
-            await chrome.windows.create({focused: true, state: 'maximized', tabId: currentTab.id});
+        const userSettings = { ...settings, ...storage.settings };
+        if (userSettings.groupInNewWindow) {
+            await chrome.windows.create({ focused: true, state: 'maximized', tabId: currentTab.id });
         }
         const newGroupId = await chrome.tabs.group({ tabIds: currentTab.id });
-        await chrome.storage.session.set({'orgIdGroupMap': {...orgIdGroupMap, [orgId]: newGroupId }});
+        await chrome.storage.session.set({ 'orgIdGroupMap': { ...orgIdGroupMap, [orgId]: newGroupId } });
         await chrome.tabGroups.update(newGroupId, { title: name });
     }
 }
@@ -68,25 +68,25 @@ const handleRefresh = async (sendResponse) => {
 
         const listOfTabList = await Promise.all(tabsPromisesList);
         const tabList = listOfTabList.flat();
-        if(tabList.length){
+        if (tabList.length) {
             await chrome.tabs.ungroup(tabList.map(t => t.id));
         }
         await chrome.storage.session.remove('orgIdGroupMap');
         // ask tabs for org id
         const allTabs = await chrome.tabs.query({});
         const tabResponsesPromise = allTabs.map(tab => {
-            return chrome.tabs.sendMessage( tab.id, {action: CONSTANTS.GET_ORG_ID});
+            return chrome.tabs.sendMessage(tab.id, { action: CONSTANTS.GET_ORG_ID });
         });
         const tabResponses = await Promise.allSettled(tabResponsesPromise);
         const tabsWithOrgId = tabResponses.map((response, index) => {
-            if(response.status == 'fulfilled'){
+            if (response.status == 'fulfilled') {
                 return {
                     ...response.value,
                     tab: allTabs[index]
                 }
             }
             return null;
-        }).filter(tabWithId => !!tabWithId && !! tabWithId.orgId);
+        }).filter(tabWithId => !!tabWithId && !!tabWithId.orgId);
 
         // regroup tabs
         for (const tabInfo of tabsWithOrgId) {
@@ -98,7 +98,7 @@ const handleRefresh = async (sendResponse) => {
         }
         sendResponse(true);
     }
-    catch(ex){
+    catch (ex) {
         sendResponse(false);
     }
 }
@@ -106,10 +106,10 @@ const handleRefresh = async (sendResponse) => {
 // new tab listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
-    if(request.action === CONSTANTS.GET_SETTINGS){
+    if (request.action === CONSTANTS.GET_SETTINGS) {
         (async () => {
             const storage = await chrome.storage.sync.get('settings');
-            const userSettings = {...settings, ...storage.settings};
+            const userSettings = { ...settings, ...storage.settings };
             sendResponse({ settings: userSettings });
         })();
         return true;
@@ -137,7 +137,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         })();
         return true;
     }
-    else if(request.action == CONSTANTS.REFRESH) {
+    else if (request.action == CONSTANTS.REFRESH) {
         handleRefresh(sendResponse);
         return true;
     }
@@ -151,6 +151,6 @@ chrome.tabGroups.onRemoved.addListener(async (removedGroup) => {
     const orgId = Object.keys(orgIdGroupMap)[Object.values(orgIdGroupMap).indexOf(removedGroup.id)];
     if (orgId) {
         delete orgIdGroupMap[orgId];
-        await chrome.storage.session.set({'orgIdGroupMap': orgIdGroupMap});
+        await chrome.storage.session.set({ 'orgIdGroupMap': orgIdGroupMap });
     }
 });
