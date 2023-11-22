@@ -35,8 +35,13 @@ export default class Popup extends LightningElement {
         const { fieldName, value } = event.detail;
         this.settings[fieldName] = value;
         await chrome.storage.sync.set({ 'settings': this.settings });
-        if(fieldName == 'enableOrganizer' && !value){
-            await this.refreshOrgIdGroupMap();
+        if(fieldName == 'enableOrganizer'){
+            if(value){
+                const success = await chrome.runtime.sendMessage({action: CONSTANTS.REFRESH});
+            }
+            else {
+                await this.refreshOrgIdGroupMap();
+            }
         }
     }
 
