@@ -49,7 +49,7 @@ const createGroup = async (currentTab, orgId, name) => {
 const getNameSuggestion = async (origin, orgId) => {
     const orgNameMapStorage = await chrome.storage.sync.get('orgNameMap');
     const orgNameMap = orgNameMapStorage.orgNameMap ?? {};
-    if(orgNameMap[orgId]){
+    if (orgNameMap[orgId]) {
         return orgNameMap[orgId];
     }
 
@@ -127,7 +127,7 @@ const handleUngroup = async (sendResponse, ungroupAndClose) => {
     const listOfTabList = await Promise.all(tabsPromisesList);
     const tabList = listOfTabList.flat();
 
-    if(tabList.length){
+    if (tabList.length) {
         const tabIdList = tabList.map(t => t.id);
         await chrome.storage.session.remove('orgIdGroupMap');
         if (ungroupAndClose) {
@@ -179,7 +179,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         handleRefresh(sendResponse);
         return true;
     }
-    else if(request.action == CONSTANTS.CLOSE_ALL_GROUP || request.action == CONSTANTS.UNGROUP_ALL_TABS){
+    else if (request.action == CONSTANTS.CLOSE_ALL_GROUP || request.action == CONSTANTS.UNGROUP_ALL_TABS) {
         handleUngroup(sendResponse, request.action == CONSTANTS.CLOSE_ALL_GROUP);
         return true;
     }
@@ -200,16 +200,30 @@ chrome.tabGroups.onRemoved.addListener(async (removedGroup) => {
 
 // to monitor changes
 chrome.storage.onChanged.addListener(function (changes, storageName) {
-    if(storageName == 'session'){
-        if(changes.orgIdGroupMap){
+    if (storageName == 'session') {
+        if (changes.orgIdGroupMap) {
             let groupCounts = 0;
-            if(changes.orgIdGroupMap.newValue){
+            if (changes.orgIdGroupMap.newValue) {
                 groupCounts = Object.keys(changes.orgIdGroupMap.newValue).length;
             }
-            chrome.action.setBadgeText({"text": groupCounts.toString() });
+            chrome.action.setBadgeText({ "text": groupCounts.toString() });
         }
     }
 });
 
-chrome.action.setBadgeBackgroundColor({color: '#008080'});
-chrome.action.setBadgeTextColor( {color: '#FFF'} );
+chrome.action.setBadgeBackgroundColor({ color: '#008080' });
+chrome.action.setBadgeTextColor({ color: '#FFF' });
+
+
+// group update listener
+chrome.tabGroups.onUpdated.addListener(async (updatedGroup) => {
+
+    const orgIdGroupMapStorage = await chrome.storage.session.get('orgIdGroupMap');
+    let orgIdGroupMap = orgIdGroupMapStorage.orgIdGroupMap ?? {};
+    const orgId = Object.keys(orgIdGroupMap)[Object.values(orgIdGroupMap).indexOf(updatedGroup.id)];
+    if (orgId) {
+        const orgNameMapStorage = await chrome.storage.sync.get('orgNameMap');
+        const orgNameMap = orgNameMapStorage.orgNameMap ?? {};
+        await chrome.storage.sync.set({ 'orgNameMap': { ...orgNameMap, [orgId]: updatedGroup.title } });
+    }
+});
