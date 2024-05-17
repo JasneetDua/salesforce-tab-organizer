@@ -47,6 +47,10 @@ const init = async () => {
     const orgId = getOrgIdFromCookie();
     // if org id found, ask service worker to group
     if (orgId) {
+        // handle popup
+        if(!window.menubar.visible){
+            return; // do nothing if its a lookup popup
+        }
         // if ask group name is enabled
         if (settings.enableGroupNamePrompt) {
             const existanceCheckResponse = await chrome.runtime.sendMessage({
